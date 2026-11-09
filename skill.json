@@ -1,0 +1,23 @@
+{
+  "name": "canva-mcp",
+  "description": "Canva MCP skill for DSH agents - enables AI agents to create and manage Canva designs programmatically",
+  "version": "1.0.0",
+  "category": "mcp",
+  "capabilities": [
+    "design-generation",
+    "design-editing",
+    "asset-management",
+    "brand-management",
+    "export-management"
+  ],
+  "required_platform": "dsh-mcp",
+  "configuration": {
+    "mcp_server": "https://mcp.canva.com/mcp",
+    "authentication": "oauth",
+    "required_plan": "canva_pro"
+  },
+  "documentation_url": "https://canva.dev/docs/apps/mcp/",
+  "entrypoint": "canva_mcp_client.py",
+  "entrypoint_description": "Entry point for Canva MCP skill in DSH environment",
+  "version": "1.0.0"
+}
