@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Canva MCP",
+    "description": "Connects Canva's hosted MCP server, giving the agent tools to generate designs from a prompt, search your design library, upload assets, and export finished designs."
+  }
+}

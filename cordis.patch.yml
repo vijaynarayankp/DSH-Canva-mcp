@@ -1,0 +1,54 @@
+# Canva MCP bundle layer.
+#
+# Canva's hosted MCP server (https://mcp.canva.com/mcp) is OAuth-protected and
+# answers an unauthenticated request with HTTP 401. @deepseek-ai/dsh-mcp-client
+# speaks plain HTTP and exposes no OAuth flow of its own, so this row bridges
+# through mcp-remote, which performs the sign-in and caches the resulting token:
+#
+#   npx -y mcp-remote@latest https://mcp.canva.com/mcp
+#
+# The first connection opens a Canva sign-in page. Approve it once and the token
+# is reused afterwards. Once connected, the server's tools register under the
+# usual server-qualified names: mcp__canva__generate-design,
+# mcp__canva__search-designs, mcp__canva__export-design, and so on.
+#
+# Operational notes:
+#
+#   * mcp-remote is the only process allowed to own the sign-in for a given
+#     server URL. It derives its OAuth callback port from that URL (29865 for
+#     Canva) and stores one client registration per URL in ~/.mcp-auth. Running a
+#     second instance against the same URL re-registers the client behind the
+#     first one's back, and the token exchange then fails with
+#     "invalid_grant: Client ID mismatch". To sign in again, stop every other
+#     instance first, or delete ~/.mcp-auth/mcp-remote-v1/*_client_info.json.
+#
+#   * npm_config_cache points npm at a harness-owned cache directory so the
+#     bridge never depends on the user's ambient npm cache. Note that an
+#     ordinary shell under the workspace-write sandbox cannot write there
+#     either; EPERM from npm in that context is the sandbox, not file ownership.
+#
+#   * failOnStartupError stays false so a sign-in that has not been completed yet
+#     cannot take down the surrounding harness: the row activates, reconnects on
+#     its own, and syncs the tool list once authorization finishes. Flip it to
+#     true only after a successful sign-in, to make future auth failures loud.
+#
+# toolCallTimeoutMs is raised above the 60s default because Canva's design
+# generation and export calls routinely run longer than a minute.
+- insert:
+    - id: canva-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: canva
+        transport: stdio
+        command: npx
+        args:
+          - '-y'
+          - mcp-remote@latest
+          - https://mcp.canva.com/mcp
+        env:
+          npm_config_cache: !!js dshHomePath('npm-cache')
+        toolCallTimeoutMs: 180000
+        failOnStartupError: false
+        reconnect:
+          enabled: true
+          maxAttempts: 30

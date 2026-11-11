@@ -115,7 +115,8 @@ async def search_designs(session, tools, query: str = None):
         print("❌ search-designs tool not available")
         return None
     
-    print(f"\n🔍 Searching designs{f' - \"{query}\"' if query else ''}")
+    suffix = f' - "{query}"' if query else ''
+    print(f"\n🔍 Searching designs{suffix}")
     
     try:
         result: CallToolResult = await session.call_tool(

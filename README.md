@@ -11,6 +11,59 @@ Based on [Canva's official MCP documentation](https://canva.dev/docs/apps/mcp/),
 - Asset upload and brand management
 - Export in multiple formats
 
+## Install in DeepSeek Harness (DSH)
+
+This repository is a **configuration-only DSH bundle**. It declares no Host or
+Client entry files; it exists to mount one MCP client row.
+
+### Bundle files
+
+| File | Purpose |
+|------|---------|
+| `package.json` | Declares `dsh.bundle.patch`, plus the exported locale and icon |
+| `cordis.patch.yml` | Inserts the `canva-mcp` row using `@deepseek-ai/dsh-mcp-client` |
+| `locale/en.json` | Plugin Manager title and description |
+| `icon.svg` | Plugin inventory icon |
+
+### Install
+
+```
+plugin_manager install_bundle  target: <absolute path to this repository>
+```
+
+Or from a shell, with `dsh` on PATH:
+
+```bash
+dsh plugin --profile <profile> add <absolute path to this repository>
+```
+
+Remove it again with `plugin_manager remove_bundle` (target `@local/canva-mcp`).
+
+### Sign in
+
+Canva's endpoint is OAuth-protected and needs a one-time per-user approval. The
+row bridges through `mcp-remote`, which opens a Canva consent page, then caches
+the token in `~/.mcp-auth` and reuses it on every later start.
+
+After approval the server's tools appear as `mcp__canva__<tool>` — for example
+`mcp__canva__generate-design`, `mcp__canva__search-designs`,
+`mcp__canva__export-design`. Verify with `mcp__canva__get-logged-in-account-details`.
+
+### Troubleshooting
+
+- **`Version negotiation failed: the server requires authorization (HTTP 401)`** —
+  normal before the first sign-in. The row keeps retrying; complete the Canva
+  consent page it opens.
+- **`invalid_grant: Client ID mismatch`** — two `mcp-remote` instances are
+  racing for the same server URL. `mcp-remote` keeps one client registration per
+  URL keyed by the callback port it derives from that URL (29865 for Canva).
+  Stop every other instance, delete `~/.mcp-auth/mcp-remote-v1/*_client_info.json`,
+  and let a single instance sign in.
+- **`EPERM` from npm** — the npm cache is not writable in the current context.
+  The bundle already redirects npm to a harness-owned cache via
+  `npm_config_cache`; a shell under the workspace-write sandbox may still be
+  blocked, which is the sandbox rather than file ownership.
+
 ## Configuration
 
 ### For Cursor IDE
